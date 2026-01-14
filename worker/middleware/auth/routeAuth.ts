@@ -70,6 +70,7 @@ export async function routeAuthChecks(
     params?: Record<string, string>
 ): Promise<{ success: boolean; response?: Response }> {
 // console.log('requirement', requirement, 'for user', user);
+		try {
 
         // Public routes always pass
         if (requirement.level === 'public') {
