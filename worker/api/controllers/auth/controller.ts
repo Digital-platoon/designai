@@ -59,16 +59,16 @@ export class AuthController extends BaseController {
 
             const validatedData = registerSchema.parse(bodyResult.data);
 
-            if (env.ALLOWED_EMAIL && validatedData.email !== env.ALLOWED_EMAIL) {
-                return AuthController.createErrorResponse(
-                    'Email Whitelisting is enabled. Please use the allowed email to register.',
-                    403
-                );
-            }
-            
-            const authService = new AuthService(env);
-            const result = await authService.register(validatedData, request);
-            
+//             if (env.ALLOWED_EMAIL && validatedData.email !== env.ALLOWED_EMAIL) {
+                // return AuthController.createErrorResponse(
+                    // 'Email Whitelisting is enabled. Please use the allowed email to register.',
+                    // 403
+                // );
+            // }
+//             
+            // const authService = new AuthService(env);
+            // const result = await authService.register(validatedData, request);
+//             
             const response = AuthController.createSuccessResponse(
                 formatAuthResponse(result.user, result.sessionId, result.expiresAt)
             );
