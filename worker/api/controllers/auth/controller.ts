@@ -114,11 +114,11 @@ export class AuthController extends BaseController {
 
             const validatedData = loginSchema.parse(bodyResult.data);
 
-            if (env.ALLOWED_EMAIL && validatedData.email !== env.ALLOWED_EMAIL) {
-                return AuthController.createErrorResponse(
-                    'Email Whitelisting is enabled. Please use the allowed email to login.',
-                    403
-                );
+//             if (env.ALLOWED_EMAIL && validatedData.email !== env.ALLOWED_EMAIL) {
+                // return AuthController.createErrorResponse(
+                    // 'Email Whitelisting is enabled. Please use the allowed email to login.',
+                    // 403
+                // );
             }
             
             const authService = new AuthService(env);
