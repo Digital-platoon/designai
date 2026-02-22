@@ -2,20 +2,20 @@
  * Centralized Authentication Utilities
  */
 
-import type {  AuthUser } from '../types/auth-types';
+import type { AuthUser } from '../types/auth-types';
 import type { User } from '../database/schema';
 
 /**
  * Extract sessionId from cookie
 */
 export function extractSessionId(request: Request): string | null {
-    const cookieHeader = request.headers.get('Cookie');
-       if (!cookieHeader) {
-               return null;
-       }
+	const cookieHeader = request.headers.get('Cookie');
+	if (!cookieHeader) {
+		return null;
+	}
 
-       const cookies = parseCookies(cookieHeader);
-       return cookies['sessionId'];
+	const cookies = parseCookies(cookieHeader);
+	return cookies['sessionId'];
 }
 
 
@@ -249,8 +249,9 @@ export function extractRequestMetadata(request: Request): RequestMetadata {
  */
 export interface SessionResponse {
 	user: AuthUser;
-    sessionId: string;
-    expiresAt: Date | null;
+	sessionId: string;
+	expiresAt: Date | null;
+	requiresEmailVerification?: boolean;
 }
 
 export function mapUserResponse(
@@ -280,9 +281,15 @@ export function formatAuthResponse(
 	user: AuthUser,
 	sessionId: string,
 	expiresAt: Date | null,
+	requiresEmailVerification?: boolean
 ): SessionResponse {
-	const response: SessionResponse = { user, sessionId, expiresAt };
-    
+	const response: SessionResponse = {
+		user,
+		sessionId,
+		expiresAt,
+		requiresEmailVerification
+	};
+
 	return response;
 }
 

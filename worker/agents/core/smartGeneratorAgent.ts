@@ -8,7 +8,7 @@ import { AgentInitArgs } from "./types";
  * TODO: NOT YET IMPLEMENTED, CURRENTLY Just uses SimpleCodeGeneratorAgent
  */
 export class SmartCodeGeneratorAgent extends SimpleCodeGeneratorAgent {
-    
+
     /**
      * Initialize the smart code generator with project blueprint and template
      * Sets up services and begins deployment process
@@ -34,7 +34,13 @@ export class SmartCodeGeneratorAgent extends SimpleCodeGeneratorAgent {
         }
     }
 
-    async builderLoop() {
-        // TODO
+    async builderLoop(): Promise<void> {
+        // TODO: Implement smart LLM-orchestrated loop
+        // For now, fail loudly rather than silently doing nothing
+        const errorMsg = 'SmartCodeGeneratorAgent.builderLoop() is not yet implemented. Falling back to deterministic mode.';
+        this.logger().warn(errorMsg);
+        this.broadcast('ERROR' as any, { error: errorMsg });
+        // Fall back to parent deterministic generation rather than silently exiting
+        return super.generateAllFiles();
     }
 }

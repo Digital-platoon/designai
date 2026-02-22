@@ -30,8 +30,8 @@ export default defineConfig({
 		svgr(),
 		cloudflare({
 			configPath: 'wrangler.jsonc',
-			experimental: { remoteBindings: true },
-		}), // Add the node polyfills plugin here
+			// experimental: { remoteBindings: true },
+		}),
 		// nodePolyfills({
 		//     exclude: [
 		//       'tty', // Exclude 'tty' module
@@ -55,8 +55,8 @@ export default defineConfig({
 			debug: 'debug/src/browser',
 			// "@": path.resolve(__dirname, "./src"),
 			'@': path.resolve(__dirname, './src'),
-            'shared': path.resolve(__dirname, './shared'),
-            'worker': path.resolve(__dirname, './worker'),
+			'shared': path.resolve(__dirname, './shared'),
+			'worker': path.resolve(__dirname, './worker'),
 		},
 	},
 
@@ -84,6 +84,6 @@ export default defineConfig({
 	cacheDir: 'node_modules/.vite',
 
 	build: {
-		sourcemap: true,
+		sourcemap: false,
 	},
 });

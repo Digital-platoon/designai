@@ -47,7 +47,7 @@ export function createApp(env: Env): Hono<AppEnv> {
                 await next();
                 
                 // Only set CSRF token for successful API responses
-                if (c.req.url.startsWith('/api/') && c.res.status < 400) {
+                if (new URL(c.req.url).pathname.startsWith('/api/') && c.res.status < 400) {
                     await CsrfService.enforce(c.req.raw, c.res);
                 }
                 
