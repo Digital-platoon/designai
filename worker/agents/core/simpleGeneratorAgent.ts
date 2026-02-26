@@ -120,7 +120,7 @@ export class SimpleCodeGeneratorAgent extends Agent<Env, CodeGenState> {
 
     public _logger: StructuredLogger | undefined;
 
-    private initLogger(agentId: string, sessionId: string, userId: string) {
+    private initLogger(agentId: string, sessionId: string, userId: string | null) {
         this._logger = createObjectLogger(this, 'CodeGeneratorAgent');
         this._logger.setObjectId(agentId);
         this._logger.setFields({
@@ -133,7 +133,7 @@ export class SimpleCodeGeneratorAgent extends Agent<Env, CodeGenState> {
 
     logger(): StructuredLogger {
         if (!this._logger) {
-            this._logger = this.initLogger(this.getAgentId(), this.state.sessionId, this.state.inferenceContext.userId);
+            this._logger = this.initLogger(this.getAgentId(), this.state.sessionId, this.state.inferenceContext.userId ?? '');
         }
         return this._logger;
     }
@@ -205,7 +205,7 @@ export class SimpleCodeGeneratorAgent extends Agent<Env, CodeGenState> {
     ): Promise<CodeGenState> {
 
         const { query, language, frameworks, hostname, inferenceContext, templateInfo, sandboxSessionId } = initArgs;
-        this.initLogger(inferenceContext.agentId, sandboxSessionId, inferenceContext.userId);
+        this.initLogger(inferenceContext.agentId, sandboxSessionId, inferenceContext.userId ?? '');
 
         // Generate a blueprint
         this.logger().info('Generating blueprint', { query, queryLength: query.length, imagesCount: initArgs.images?.length || 0 });
@@ -235,6 +235,7 @@ export class SimpleCodeGeneratorAgent extends Agent<Env, CodeGenState> {
         this.setState({
             ...this.initialState,
             query,
+            agentMode: initArgs.agentMode || 'deterministic', // Preserve agentMode from request
             blueprint,
             templateDetails: templateInfo.templateDetails,
             sandboxInstanceId: undefined,

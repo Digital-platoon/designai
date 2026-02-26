@@ -70,9 +70,12 @@ Be proactive. If you see errors, fix them. If the user's request is complex, bre
             let loopCount = 0;
             const MAX_LOOP = 20;
 
-            while ((this.state.currentDevState as any) !== CurrentDevState.IDLE && loopCount < MAX_LOOP) {
+            // Kick off the loop by marking the agent as active
+            this.setState({ ...this.state, currentDevState: CurrentDevState.PHASE_GENERATING });
+
+            while (this.state.currentDevState !== CurrentDevState.IDLE && loopCount < MAX_LOOP) {
                 loopCount++;
-                this.logger().info(`[builderLoop] Iteration ${loopCount}, current state: ${CurrentDevState[this.state.currentDevState]}`);
+                this.logger().info(`[builderLoop] Iteration ${loopCount}, current state: ${this.state.currentDevState}`);
 
                 const response = await executeInference({
                     env: this.env,
@@ -82,15 +85,15 @@ Be proactive. If you see errors, fix them. If the user's request is complex, bre
                     tools: getSmartAgentTools(this)
                 });
 
-                if (response?.string) {
+                if (response && 'string' in response && response.string) {
                     messages.push({ role: 'assistant', content: response.string });
                     this.broadcast(WebSocketMessageResponses.CONVERSATIONAL_RESPONSE, {
                         content: response.string
                     });
                 }
 
-                // If it successfully reached IDLE via tools, we can stop
-                if (this.state.currentDevState === CurrentDevState.IDLE) {
+                // If tools transitioned state to IDLE, stop
+                if ((this.state.currentDevState as CurrentDevState) === CurrentDevState.IDLE) {
                     break;
                 }
             }

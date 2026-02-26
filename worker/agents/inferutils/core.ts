@@ -454,19 +454,23 @@ export async function infer<OutputSchema extends z.AnyZodObject>({
     }
 
     try {
+        // Resolve a non-null userId for rate limiting and config lookups
+        const resolvedUserId = metadata.userId ?? '';
+
         const authUser: AuthUser = {
-            id: metadata.userId,
-            email: 'unknown@platform.local',
+            id: resolvedUserId || 'anonymous',
+            email: 'platform-agent@system.internal',
             displayName: undefined,
             username: undefined,
-            avatarUrl: undefined
+            avatarUrl: undefined,
+            isAnonymous: !metadata.userId
         };
 
-        const userConfig = await getUserConfigurableSettings(env, metadata.userId)
+        const userConfig = await getUserConfigurableSettings(env, resolvedUserId)
         // Maybe in the future can expand using config object for other stuff like global model configs?
         await RateLimitService.enforceLLMCallsRateLimit(env, userConfig.security.rateLimit, authUser)
 
-        const { apiKey, baseURL, defaultHeaders } = await getConfigurationForModel(modelName, env, metadata.userId);
+        const { apiKey, baseURL, defaultHeaders } = await getConfigurationForModel(modelName, env, resolvedUserId);
         console.log(`baseUrl: ${baseURL}, modelName: ${modelName}`);
 
         // Remove [*.] from model name

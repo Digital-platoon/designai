@@ -47,11 +47,11 @@
         ]
     },
     /**
-	 * Bindings
-	 * Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including
-	 * databases, object storage, AI inference, real-time communication and more.
-	 * https://developers.cloudflare.com/workers/runtime-apis/bindings/
-	 */
+     * Bindings
+     * Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including
+     * databases, object storage, AI inference, real-time communication and more.
+     * https://developers.cloudflare.com/workers/runtime-apis/bindings/
+     */
     "ai": {
         "binding": "AI",
         "remote": true
@@ -92,8 +92,7 @@
             "binding": "DB",
             "database_name": "vibesdk-db",
             "database_id": "4abe6cbc-2058-4773-ba54-93b903c0e9f3",
-            "migrations_dir": "migrations",
-            "remote": true
+            "migrations_dir": "migrations"
         }
     ],
     "durable_objects": {
