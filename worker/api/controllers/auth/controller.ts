@@ -44,7 +44,6 @@ export class AuthController extends BaseController {
      */
     static async register(request: Request, env: Env, _ctx: ExecutionContext, _routeContext: RouteContext): Promise<Response> {
         try {
-            // Check if OAuth providers are configured - if yes, block email/password registration
             if (AuthController.hasOAuthProviders(env)) {
                 return AuthController.createErrorResponse(
                     'Email/password registration is not available when OAuth providers are configured. Please use OAuth login instead.',
@@ -98,7 +97,6 @@ export class AuthController extends BaseController {
      */
     static async login(request: Request, env: Env, _ctx: ExecutionContext, _routeContext: RouteContext): Promise<Response> {
         try {
-            // Check if OAuth providers are configured - if yes, block email/password login
             if (AuthController.hasOAuthProviders(env)) {
                 return AuthController.createErrorResponse(
                     'Email/password login is not available when OAuth providers are configured. Please use OAuth login instead.',

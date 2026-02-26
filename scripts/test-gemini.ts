@@ -27,7 +27,7 @@ function getEnvVars() {
 async function testGemini() {
     const env = getEnvVars();
     const key = env.GOOGLE_AI_STUDIO_API_KEY;
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${key}`;
 
     console.log(`📡 Testing Gemini API...`);
 
