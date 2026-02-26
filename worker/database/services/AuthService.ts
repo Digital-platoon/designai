@@ -22,11 +22,12 @@ import {
     AuthUser,
     OAuthProvider
 } from '../../types/auth-types';
-import { mapUserResponse } from '../../utils/authUtils';
 import { createLogger } from '../../logger';
 import { validateEmail, validatePassword } from '../../utils/validationUtils';
-import { extractRequestMetadata } from '../../utils/authUtils';
+import { extractRequestMetadata, mapUserResponse } from '../../utils/authUtils';
 import { BaseService } from './BaseService';
+import { EmailService } from '../../services/email/EmailService';
+import { validateRedirectUrl } from '../../utils/redirectValidation';
 
 const logger = createLogger('AuthService');
 
@@ -54,6 +55,7 @@ export interface RegistrationData {
 export class AuthService extends BaseService {
     private readonly sessionService: SessionService;
     private readonly passwordService: PasswordService;
+    private readonly emailService: EmailService;
 
     constructor(
         env: Env,
@@ -61,6 +63,7 @@ export class AuthService extends BaseService {
         super(env);
         this.sessionService = new SessionService(env);
         this.passwordService = new PasswordService();
+        this.emailService = new EmailService(env);
     }
 
     /**
@@ -308,7 +311,7 @@ export class AuthService extends BaseService {
         // Validate and sanitize intended redirect URL
         let validatedRedirectUrl: string | null = null;
         if (intendedRedirectUrl) {
-            validatedRedirectUrl = this.validateRedirectUrl(intendedRedirectUrl, request);
+            validatedRedirectUrl = this.validateOAuthRedirectUrl(intendedRedirectUrl, request);
         }
 
         // Generate state for CSRF protection
@@ -540,41 +543,10 @@ export class AuthService extends BaseService {
 
     /**
      * Validate and sanitize redirect URL to prevent open redirect attacks
+     * Delegates to the centralized redirect validation utility
      */
-    private validateRedirectUrl(redirectUrl: string, request: Request): string | null {
-        try {
-            const requestUrl = new URL(request.url);
-
-            // Handle relative URLs by constructing absolute URL with same origin
-            const redirectUrlObj = redirectUrl.startsWith('/')
-                ? new URL(redirectUrl, requestUrl.origin)
-                : new URL(redirectUrl);
-
-            // Only allow same-origin redirects for security
-            if (redirectUrlObj.origin !== requestUrl.origin) {
-                logger.warn('OAuth redirect URL rejected: different origin', {
-                    redirectUrl: redirectUrl,
-                    requestOrigin: requestUrl.origin,
-                    redirectOrigin: redirectUrlObj.origin
-                });
-                return null;
-            }
-
-            // Prevent redirecting to authentication endpoints to avoid loops
-            const authPaths = ['/api/auth/', '/logout'];
-            if (authPaths.some(path => redirectUrlObj.pathname.startsWith(path))) {
-                logger.warn('OAuth redirect URL rejected: auth endpoint', {
-                    redirectUrl: redirectUrl,
-                    pathname: redirectUrlObj.pathname
-                });
-                return null;
-            }
-
-            return redirectUrl;
-        } catch (error) {
-            logger.warn('Invalid OAuth redirect URL format', { redirectUrl, error });
-            return null;
-        }
+    private validateOAuthRedirectUrl(redirectUrl: string, request: Request): string | null {
+        return validateRedirectUrl(redirectUrl, { request });
     }
 
     /**
@@ -598,16 +570,10 @@ export class AuthService extends BaseService {
             used: false
         });
 
-        // --- EMAIL SENDING LOGIC ---
-        // TODO: Replace with actual production email service integration
-        // For development/debugging, we log the OTP
-        console.log(`[AUTH] Verification code for ${email}: ${otp}`);
-        logger.info('Verification OTP generated and stored', { email });
+        // Send verification email via Resend
+        await this.emailService.sendVerificationEmail(email.toLowerCase(), otp);
 
-        // If you're using Cloudflare, consider integrating with:
-        // 1. MailChannels (Free for Workers)
-        // 2. Postmark / Resend / SendGrid
-        // 3. Cloudflare Email Routing with a Worker
+        logger.info('Verification OTP generated, stored and emailed', { email });
     }
 
     /**

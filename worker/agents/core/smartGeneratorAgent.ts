@@ -1,6 +1,10 @@
 import { SimpleCodeGeneratorAgent } from "./simpleGeneratorAgent";
-import { CodeGenState } from "./state";
+import { CodeGenState, CurrentDevState } from "./state";
 import { AgentInitArgs } from "./types";
+import { executeInference } from "../inferutils/infer";
+import { createSystemMessage, createUserMessage } from "../inferutils/common";
+import { getSmartAgentTools } from "./smartAgentTools";
+import { WebSocketMessageResponses } from "../constants";
 
 /**
  * SmartCodeGeneratorAgent - Smartly orchestrated AI-powered code generation
@@ -35,12 +39,75 @@ export class SmartCodeGeneratorAgent extends SimpleCodeGeneratorAgent {
     }
 
     async builderLoop(): Promise<void> {
-        // TODO: Implement smart LLM-orchestrated loop
-        // For now, fail loudly rather than silently doing nothing
-        const errorMsg = 'SmartCodeGeneratorAgent.builderLoop() is not yet implemented. Falling back to deterministic mode.';
-        this.logger().warn(errorMsg);
-        this.broadcast('ERROR' as any, { error: errorMsg });
-        // Fall back to parent deterministic generation rather than silently exiting
-        return super.generateAllFiles();
+        this.logger().info('🧠 Starting Smart Builder Loop');
+        this.broadcast(WebSocketMessageResponses.GENERATION_STARTED, {
+            message: 'Starting smart AI orchestration',
+            totalFiles: this.getTotalFiles()
+        });
+        this.isGenerating = true;
+
+        const systemPrompt = `
+You are the Smart Orchestrator for DesignAI. Your goal is to build a complete, high-quality web application based on the user's requirements.
+
+You have access to powerful tools to plan, implement, and review code:
+1. **plan_next_phase**: Always start by planning the first/next phase.
+2. **implement_current_phase**: After planning, implement it.
+3. **review_and_fix_code**: Essential for catching typos, TypeScript errors, and logic bugs. Run this after implementation.
+4. **finalize_project**: Call this when the app is fully functional and meets all requirements.
+
+Your workflow should be:
+Plan -> Implement -> Review/Fix -> Repeat until complete -> Finalize.
+
+Be proactive. If you see errors, fix them. If the user's request is complex, break it into logical phases.
+`;
+
+        const messages = [
+            createSystemMessage(systemPrompt),
+            createUserMessage(`User Request: ${this.state.query}\n\nExisting Blueprint: ${JSON.stringify(this.state.blueprint)}`)
+        ];
+
+        try {
+            let loopCount = 0;
+            const MAX_LOOP = 20;
+
+            while ((this.state.currentDevState as any) !== CurrentDevState.IDLE && loopCount < MAX_LOOP) {
+                loopCount++;
+                this.logger().info(`[builderLoop] Iteration ${loopCount}, current state: ${CurrentDevState[this.state.currentDevState]}`);
+
+                const response = await executeInference({
+                    env: this.env,
+                    messages,
+                    agentActionName: 'blueprint', // Heavy lifting model
+                    context: this.state.inferenceContext,
+                    tools: getSmartAgentTools(this)
+                });
+
+                if (response?.string) {
+                    messages.push({ role: 'assistant', content: response.string });
+                    this.broadcast(WebSocketMessageResponses.CONVERSATIONAL_RESPONSE, {
+                        content: response.string
+                    });
+                }
+
+                // If it successfully reached IDLE via tools, we can stop
+                if (this.state.currentDevState === CurrentDevState.IDLE) {
+                    break;
+                }
+            }
+
+            if (loopCount >= MAX_LOOP) {
+                this.logger().warn('Builder loop reached maximum iterations');
+            }
+
+            this.logger().info('Smart Builder Loop completed successfully');
+        } catch (error) {
+            this.logger().error('Error in builderLoop:', error);
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.broadcast(WebSocketMessageResponses.ERROR, {
+                error: `Smart Generation failed: ${errorMessage}`
+            });
+        } finally {
+            this.isGenerating = false;
+        }
     }
 }

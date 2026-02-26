@@ -55,6 +55,7 @@ declare namespace Cloudflare {
 
         // --- Variables ---
         ENABLE_READ_REPLICAS?: string;
+        RESEND_API_KEY?: string;
     }
 }
 

@@ -119,9 +119,11 @@ export class LocalSandboxService extends BaseSandboxService {
         }
 
         this.instances.set(runId, { templateName, projectName, status: 'running' });
+        const previewURL = `https://${runId}.mock.preview`;
         return {
             success: true,
-            runId
+            runId,
+            previewURL
         };
     }
 

@@ -31,7 +31,7 @@
                 "type": "ratelimit",
                 "namespace_id": "2101",
                 "simple": {
-                    "limit": 10000,
+                    "limit": 200,
                     "period": 60
                 }
             },
@@ -40,7 +40,7 @@
                 "type": "ratelimit",
                 "namespace_id": "2102",
                 "simple": {
-                    "limit": 1000,
+                    "limit": 15,
                     "period": 60
                 }
             }
@@ -96,12 +96,10 @@
                 "class_name": "CodeGeneratorAgent",
                 "name": "CodeGenObject"
             },
-            /*
             {
                 "class_name": "UserAppSandboxService",
                 "name": "Sandbox"
             },
-            */
             {
                 "class_name": "DORateLimitStore",
                 "name": "DORateLimitStore"
@@ -152,11 +150,12 @@
         }
     ],
     "vars": {
-        "TEMPLATES_REPOSITORY": "https://github.com/cloudflare/vibesdk-templates",
+        "TEMPLATES_REPOSITORY": "https://github.com/Digital-platoon/designai-templates",
         "ALLOWED_EMAIL": "anyone can use it",
-        "DISPATCH_NAMESPACE": "",
+        "DISPATCH_NAMESPACE": "designai-default-namespace",
         "ENABLE_READ_REPLICAS": "true",
-        "CLOUDFLARE_AI_GATEWAY": "vibesdk-gateway",
+        "CLOUDFLARE_AI_GATEWAY": "designai-gateway",
+        "CUSTOM_DOMAIN": "designai.dev",
         "MAX_SANDBOX_INSTANCES": "10",
         "SANDBOX_INSTANCE_TYPE": "standard-3"
     },

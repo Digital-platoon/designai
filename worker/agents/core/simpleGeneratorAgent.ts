@@ -1828,14 +1828,14 @@ export class SimpleCodeGeneratorAgent extends Agent<Env, CodeGenState> {
             });
             if (retries > 0) {
                 this.broadcast(WebSocketMessageResponses.DEPLOYMENT_FAILED, {
-                    error: `Error deploying to sandbox service: ${errorMsg}, Will retry...`,
+                    message: `Error deploying to sandbox service: ${errorMsg}, Will retry...`,
                 });
                 // Wait for exponential backoff
                 await new Promise(resolve => setTimeout(resolve, Math.pow(2, MAX_DEPLOYMENT_RETRIES - retries) * 1000));
                 return this.executeDeployment(files, redeploy, commitMessage, retries - 1);
             }
             this.broadcast(WebSocketMessageResponses.DEPLOYMENT_FAILED, {
-                error: `Error deploying to sandbox service: ${errorMsg}. Please report an issue if this persists`,
+                message: `Error deploying to sandbox service: ${errorMsg}. Please report an issue if this persists`,
             });
             return null;
         }

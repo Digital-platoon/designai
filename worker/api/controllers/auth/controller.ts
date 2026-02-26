@@ -12,19 +12,22 @@ import {
     registerSchema,
     oauthProviderSchema
 } from './authSchemas';
-import { SecurityError } from 'shared/types/errors';
+import { SecurityError, SecurityErrorType } from 'shared/types/errors';
 import {
     formatAuthResponse,
     mapUserResponse,
     setSecureAuthCookies,
     clearAuthCookies,
-    extractSessionId
+    extractSessionId,
+    extractRequestMetadata
 } from '../../../utils/authUtils';
 import { RouteContext } from '../../types/route-context';
 import { authMiddleware } from '../../../middleware/auth/auth';
 import { CsrfService } from '../../../services/csrf/CsrfService';
 import { BaseController } from '../baseController';
 import { createLogger } from '../../../logger';
+import { OAuthProvider } from '../../../types/auth-types';
+import { revalidateStoredRedirectUrl } from '../../../utils/redirectValidation';
 /**
  * Authentication Controller
  */
@@ -329,8 +332,9 @@ export class AuthController extends BaseController {
 
             const baseUrl = new URL(request.url).origin;
 
-            // Use stored redirect URL or default to home page
-            const redirectLocation = result.redirectUrl || `${baseUrl}/`;
+            // Re-validate the stored URL at point-of-use (defense-in-depth)
+            const safeRedirect = revalidateStoredRedirectUrl(result.redirectUrl, request);
+            const redirectLocation = safeRedirect ? `${baseUrl}${safeRedirect}` : `${baseUrl}/`;
 
             // Create redirect response with secure auth cookies
             const response = new Response(null, {

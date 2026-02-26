@@ -3,32 +3,31 @@ import { SmartCodeGeneratorAgent } from './agents/core/smartGeneratorAgent';
 import { proxyToSandbox } from '@cloudflare/sandbox';
 import { isDispatcherAvailable } from './utils/dispatcherUtils';
 import { createApp } from './app';
-// import * as Sentry from '@sentry/cloudflare';
-// import { sentryOptions } from './observability/sentry';
+import * as Sentry from '@sentry/cloudflare';
+import { sentryOptions } from './observability/sentry';
 import { DORateLimitStore as BaseDORateLimitStore } from './services/rate-limit/DORateLimitStore';
 import { getPreviewDomain } from './utils/urls';
+import { guardEnv } from './utils/envGuard';
 // Durable Object and Service exports
 export { UserAppSandboxService, DeployerService } from './services/sandbox/sandboxSdkClient';
 
-// export const CodeGeneratorAgent = Sentry.instrumentDurableObjectWithSentry(sentryOptions, SmartCodeGeneratorAgent);
-// export const DORateLimitStore = Sentry.instrumentDurableObjectWithSentry(sentryOptions, BaseDORateLimitStore);
-export const CodeGeneratorAgent = SmartCodeGeneratorAgent;
-export const DORateLimitStore = BaseDORateLimitStore;
+export const CodeGeneratorAgent = Sentry.instrumentDurableObjectWithSentry(sentryOptions, SmartCodeGeneratorAgent);
+export const DORateLimitStore = Sentry.instrumentDurableObjectWithSentry(sentryOptions, BaseDORateLimitStore);
 
 // Logger for the main application and handlers
 const logger = createLogger('App');
 
 function setOriginControl(env: Env, request: Request, currentHeaders: Headers): Headers {
-    const previewDomain = env.CUSTOM_DOMAIN
-    const origin = request.headers.get('Origin');
+	const previewDomain = env.CUSTOM_DOMAIN
+	const origin = request.headers.get('Origin');
 
-    const allowedOrigin = `https://${previewDomain}`;
-    if (origin === allowedOrigin) {
-        currentHeaders.set('Access-Control-Allow-Origin', allowedOrigin);
-    } else if (origin?.startsWith('http://localhost')) {
-        currentHeaders.set('Access-Control-Allow-Origin', origin);
-    }
-    return currentHeaders;
+	const allowedOrigin = `https://${previewDomain}`;
+	if (origin === allowedOrigin) {
+		currentHeaders.set('Access-Control-Allow-Origin', allowedOrigin);
+	} else if (origin?.startsWith('http://localhost')) {
+		currentHeaders.set('Access-Control-Allow-Origin', origin);
+	}
+	return currentHeaders;
 }
 
 /**
@@ -51,19 +50,19 @@ async function handleUserAppRequest(request: Request, env: Env): Promise<Respons
 	const sandboxResponse = await proxyToSandbox(request, env);
 	if (sandboxResponse) {
 		logger.info(`Serving response from sandbox for: ${hostname}`);
-		
+
 		// Add headers to identify this as a sandbox response
 		let headers = new Headers(sandboxResponse.headers);
-		
-        if (sandboxResponse.status === 500) {
-            headers.set('X-Preview-Type', 'sandbox-error');
-        } else {
-            headers.set('X-Preview-Type', 'sandbox');
-        }
-        headers = setOriginControl(env, request, headers);
-        headers.append('Vary', 'Origin');
+
+		if (sandboxResponse.status === 500) {
+			headers.set('X-Preview-Type', 'sandbox-error');
+		} else {
+			headers.set('X-Preview-Type', 'sandbox');
+		}
+		headers = setOriginControl(env, request, headers);
+		headers.append('Vary', 'Origin');
 		headers.set('Access-Control-Expose-Headers', 'X-Preview-Type');
-		
+
 		return new Response(sandboxResponse.body, {
 			status: sandboxResponse.status,
 			statusText: sandboxResponse.statusText,
@@ -85,15 +84,15 @@ async function handleUserAppRequest(request: Request, env: Env): Promise<Respons
 	try {
 		const worker = dispatcher.get(appName);
 		const dispatcherResponse = await worker.fetch(request);
-		
+
 		// Add headers to identify this as a dispatcher response
 		let headers = new Headers(dispatcherResponse.headers);
-		
+
 		headers.set('X-Preview-Type', 'dispatcher');
-        headers = setOriginControl(env, request, headers);
-        headers.append('Vary', 'Origin');
+		headers = setOriginControl(env, request, headers);
+		headers.append('Vary', 'Origin');
 		headers.set('Access-Control-Expose-Headers', 'X-Preview-Type');
-		
+
 		return new Response(dispatcherResponse.body, {
 			status: dispatcherResponse.status,
 			statusText: dispatcherResponse.statusText,
@@ -111,11 +110,16 @@ async function handleUserAppRequest(request: Request, env: Env): Promise<Respons
  */
 const worker = {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-        console.log(`Received request: ${request.method} ${request.url}`);
+		console.log(`Received request: ${request.method} ${request.url}`);
+
+		// 0. Validate critical environment variables
+		const envError = guardEnv(env);
+		if (envError) return envError;
+
 		// --- Pre-flight Checks ---
 
 		// 1. Critical configuration check: Ensure custom domain is set.
-        const previewDomain = getPreviewDomain(env);
+		const previewDomain = getPreviewDomain(env);
 		if (!previewDomain || previewDomain.trim() === '') {
 			console.error('FATAL: env.CUSTOM_DOMAIN is not configured in wrangler.toml or the Cloudflare dashboard.');
 			return new Response('Server configuration error: Application domain is not set.', { status: 500 });
@@ -160,7 +164,5 @@ const worker = {
 	},
 } satisfies ExportedHandler<Env>;
 
-export default worker;
-
-// Wrap the entire worker with Sentry for comprehensive error monitoring.
-// export default Sentry.withSentry(sentryOptions, worker);
+// export default worker;
+export default Sentry.withSentry(sentryOptions, worker);
