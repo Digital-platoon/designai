@@ -500,6 +500,23 @@ export async function infer<OutputSchema extends z.AnyZodObject>({
             messagesToPass.push(...toolCallContext.messages);
         }
 
+        // ── Pre-flight token-budget guard ───────────────────────────────────
+        // Estimate token count: ~4 characters ≈ 1 token (conservative).
+        // Claude's hard limit is ~102K tokens; we reject at 95K to leave
+        // headroom for the model's response tokens.
+        const MAX_PAYLOAD_CHARS = 380_000; // 95K tokens * 4 chars/token
+        const payloadChars = JSON.stringify(messagesToPass).length;
+        const estimatedTokens = Math.round(payloadChars / 4);
+        console.log(`Pre-flight payload estimate: ~${estimatedTokens.toLocaleString()} tokens (${payloadChars.toLocaleString()} chars)`);
+        if (payloadChars > MAX_PAYLOAD_CHARS) {
+            throw new RateLimitExceededError(
+                `Prompt too large: estimated ~${estimatedTokens.toLocaleString()} tokens exceeds the model's context limit. ` +
+                `Please start a new conversation or reduce the amount of context being sent.`,
+                RateLimitType.LLM_CALLS
+            );
+        }
+        // ────────────────────────────────────────────────────────────────────
+
         if (format) {
             if (!schema || !schemaName) {
                 throw new Error('Schema and schemaName are required when using a custom format');

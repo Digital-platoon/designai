@@ -85,5 +85,11 @@ export default defineConfig({
 
 	build: {
 		sourcemap: false,
+		rollupOptions: {
+			// The `agents` package's MCP client optionally imports the Vercel AI SDK
+			// ("ai") which is not installed. Externalize it so the bundler doesn't
+			// error trying to resolve it — it's an optional peer dep we don't use.
+			external: ['ai'],
+		},
 	},
 });
