@@ -60,13 +60,19 @@
         "binding": "IMAGES"
     },
     /*
-    "dispatch_namespaces": [
-        {
-            "binding": "DISPATCHER",
-            "namespace": "designai-built-apps",
-            "experimental_remote": true
-        }
-    ],
+    // "dispatch_namespaces": [
+
+    //     {
+
+    //         "binding": "DISPATCHER",
+
+    //         "namespace": "orange-build-default-namespace",
+
+    //         "experimental_remote": true
+
+    //     }
+
+    // ],
     */
     /*
     "containers": [
@@ -152,12 +158,12 @@
     "vars": {
         "TEMPLATES_REPOSITORY": "https://github.com/Digital-platoon/designai-templates",
         "ALLOWED_EMAIL": "anyone can use it",
-        "DISPATCH_NAMESPACE": "designai-default-namespace",
+        "DISPATCH_NAMESPACE": "",
         "ENABLE_READ_REPLICAS": "true",
         "CLOUDFLARE_AI_GATEWAY": "designai-gateway",
-        "CUSTOM_DOMAIN": "designai.dev",
         "MAX_SANDBOX_INSTANCES": "10",
-        "SANDBOX_INSTANCE_TYPE": "standard-3"
+        "SANDBOX_INSTANCE_TYPE": "standard-3",
+        "CUSTOM_DOMAIN": "designai.dev"
     },
     "statsig": {
         "secret_key_binding": "STATSIG_SECRET_KEY"
