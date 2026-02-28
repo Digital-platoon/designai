@@ -16,21 +16,12 @@ export default defineConfig({
 		force: true, // Force re-optimization on every start
 	},
 
-	// build: {
-	//     rollupOptions: {
-	//       output: {
-	//             advancedChunks: {
-	//                 groups: [{name: 'vendor', test: /node_modules/}]
-	//             }
-	//         }
-	//     }
-	// },
 	plugins: [
 		react(),
 		svgr(),
 		cloudflare({
 			configPath: 'wrangler.jsonc',
-			experimental: { remoteBindings: true },
+			remoteBindings: true,
 		}), // Add the node polyfills plugin here
 		// nodePolyfills({
 		//     exclude: [
@@ -55,8 +46,8 @@ export default defineConfig({
 			debug: 'debug/src/browser',
 			// "@": path.resolve(__dirname, "./src"),
 			'@': path.resolve(__dirname, './src'),
-            'shared': path.resolve(__dirname, './shared'),
-            'worker': path.resolve(__dirname, './worker'),
+			'shared': path.resolve(__dirname, './shared'),
+			'worker': path.resolve(__dirname, './worker'),
 		},
 	},
 
@@ -84,6 +75,37 @@ export default defineConfig({
 	cacheDir: 'node_modules/.vite',
 
 	build: {
-		sourcemap: true,
+		sourcemap: false,
+		rollupOptions: {
+			external: ['ai'],
+			output: {
+				manualChunks(id) {
+					// Monaco Editor is very large (~2MB) — isolate it
+					if (id.includes('monaco-editor')) {
+						return 'vendor-monaco';
+					}
+					// React core
+					if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router')) {
+						return 'vendor-react';
+					}
+					// Radix UI primitives
+					if (id.includes('@radix-ui')) {
+						return 'vendor-radix';
+					}
+					// Charts
+					if (id.includes('recharts') || id.includes('d3-')) {
+						return 'vendor-charts';
+					}
+					// Sentry
+					if (id.includes('@sentry')) {
+						return 'vendor-sentry';
+					}
+					// Everything else from node_modules
+					if (id.includes('node_modules')) {
+						return 'vendor-misc';
+					}
+				},
+			},
+		},
 	},
 });
