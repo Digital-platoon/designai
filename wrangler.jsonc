@@ -50,7 +50,7 @@
     {
       "binding": "DB",
       "database_name": "designai-db",
-      "database_id": "PASTE_YOUR_D1_ID_HERE",
+      "database_id": "3a033d3f-236e-4035-ab92-f0d0771d44b2",
       "migrations_dir": "migrations"
     }
   ],
@@ -83,7 +83,7 @@
   "kv_namespaces": [
     {
       "binding": "VibecoderStore",
-      "id": "PASTE_YOUR_KV_ID_HERE",
+      "id": "fea3d2a6e7c34093a81a5b889f995005",
       "remote": true
     }
   ],
