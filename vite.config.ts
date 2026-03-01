@@ -1,95 +1,67 @@
-// import { sentryVitePlugin } from '@sentry/vite-plugin';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import svgr from 'vite-plugin-svgr';
 import path from 'path';
-
 import { cloudflare } from '@cloudflare/vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
-// import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
-// https://vite.dev/config/
 export default defineConfig({
-	optimizeDeps: {
-		exclude: ['format', 'editor.all'],
-		include: ['monaco-editor/esm/vs/editor/editor.api'],
-		force: true, // Force re-optimization on every start
-	},
+  optimizeDeps: {
+    exclude: ['format', 'editor.all'],
+    // Monaco only needed in browser — never optimized into worker
+    include: ['monaco-editor/esm/vs/editor/editor.api'],
+  },
 
-	// build: {
-	//     rollupOptions: {
-	//       output: {
-	//             advancedChunks: {
-	//                 groups: [{name: 'vendor', test: /node_modules/}]
-	//             }
-	//         }
-	//     }
-	// },
-	plugins: [
-		react(),
-		svgr(),
-		cloudflare({
-			configPath: 'wrangler.jsonc',
-			// experimental: { remoteBindings: true },
-		}),
-		// nodePolyfills({
-		//     exclude: [
-		//       'tty', // Exclude 'tty' module
-		//     ],
-		//     // We recommend leaving this as `true` to polyfill `global`.
-		//     globals: {
-		//         global: true,
-		//     },
-		// })
-		tailwindcss(),
-		// sentryVitePlugin({
-		// 	org: 'cloudflare-0u',
-		// 	project: 'javascript-react',
-		// }),
-	],
+  plugins: [
+    react(),
+    svgr(),
+    cloudflare({
+      configPath: 'wrangler.jsonc',
+    }),
+    tailwindcss(),
+  ],
 
-	resolve: {
-		alias: {
-			// 'path': 'path-browserify',
-			// Add this line to fix the 'debug' package issue
-			debug: 'debug/src/browser',
-			// "@": path.resolve(__dirname, "./src"),
-			'@': path.resolve(__dirname, './src'),
-			'shared': path.resolve(__dirname, './shared'),
-			'worker': path.resolve(__dirname, './worker'),
-		},
-	},
+  resolve: {
+    alias: {
+      debug: 'debug/src/browser',
+      '@': path.resolve(__dirname, './src'),
+      shared: path.resolve(__dirname, './shared'),
+      worker: path.resolve(__dirname, './worker'),
+    },
+  },
 
-	// Configure for Prisma + Cloudflare Workers compatibility
-	define: {
-		// Ensure proper module definitions for Cloudflare Workers context
-		'process.env.NODE_ENV': JSON.stringify(
-			process.env.NODE_ENV || 'development',
-		),
-		global: 'globalThis',
-		// '__filename': '""',
-		// '__dirname': '""',
-	},
+  define: {
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+    global: 'globalThis',
+  },
 
-	worker: {
-		// Handle Prisma in worker context for development
-		format: 'es',
-	},
+  worker: {
+    format: 'es',
+  },
 
-	server: {
-		allowedHosts: true,
-	},
+  server: {
+    allowedHosts: true,
+  },
 
-	// Clear cache more aggressively
-	cacheDir: 'node_modules/.vite',
+  cacheDir: 'node_modules/.vite',
 
-	build: {
-		sourcemap: false,
-		rollupOptions: {
-			// The `agents` package's MCP client optionally imports the Vercel AI SDK
-			// ("ai") which is not installed. Externalize it so the bundler doesn't
-			// error trying to resolve it — it's an optional peer dep we don't use.
-			external: ['ai'],
-		},
-	},
+  build: {
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        // Split bundle to stay under the 1MB Cloudflare Worker limit
+        manualChunks(id) {
+          // Monaco is frontend-only — keep in its own chunk, never in worker
+          if (id.includes('monaco-editor')) return 'monaco';
+          // Sentry in a single chunk to fix the duplicate import warning
+          if (id.includes('@sentry')) return 'sentry';
+          // All other node_modules into vendor chunk
+          if (id.includes('node_modules')) return 'vendor';
+        },
+      },
+      external: [
+        'ai', // Optional peer dep from @cloudflare/agents — not installed
+      ],
+    },
+  },
 });
