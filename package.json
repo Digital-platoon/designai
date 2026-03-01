@@ -16,8 +16,8 @@
 		"test:coverage": "vitest run --coverage",
 		"db:generate": "drizzle-kit generate --config=drizzle.config.local.ts",
 		"db:generate:remote": "drizzle-kit generate --config=drizzle.config.remote.ts",
-		"db:migrate:local": "wrangler d1 migrations apply vibesdk-db --local",
-		"db:migrate:remote": "wrangler d1 migrations apply vibesdk-db --remote",
+		"db:migrate:local": "wrangler d1 migrations apply designai-db --local",
+		"db:migrate:remote": "wrangler d1 migrations apply designai-db --remote",
 		"db:studio": "drizzle-kit studio --config=drizzle.config.local.ts",
 		"db:studio:remote": "drizzle-kit studio --config=drizzle.config.remote.ts",
 		"db:setup": "bun run scripts/setup-database.ts",
@@ -71,6 +71,7 @@
 		"@typescript-eslint/typescript-estree": "^8.44.1",
 		"@vitejs/plugin-react": "^5.0.4",
 		"@vitejs/plugin-react-oxc": "^0.4.2",
+		"ai": "^5.0.48",
 		"agents": "^0.6.0",
 		"chalk": "^5.6.2",
 		"class-variance-authority": "^0.7.1",
@@ -157,5 +158,10 @@
 	"overrides": {
 		"elliptic": "^6.6.1",
 		"esbuild": "^0.25.10"
-	}
+	},
+	"trustedDependencies": [
+		"@cloudflare/workers-types",
+		"esbuild",
+		"workerd"
+	]
 }
