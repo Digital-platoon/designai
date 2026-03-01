@@ -80,29 +80,41 @@ export default defineConfig({
 			external: ['ai'],
 			output: {
 				manualChunks(id) {
-					// Monaco Editor is very large (~2MB) — isolate it
-					if (id.includes('monaco-editor')) {
-						return 'vendor-monaco';
+					// Monaco Editor (~5MB) MUST be separate
+					if (id.includes('node_modules/monaco-editor')) {
+						return 'monaco';
 					}
-					// React core
-					if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router')) {
-						return 'vendor-react';
+					// React & Routing core
+					if (
+						id.includes('node_modules/react/') ||
+						id.includes('node_modules/react-dom/') ||
+						id.includes('node_modules/react-router')
+					) {
+						return 'react-core';
 					}
-					// Radix UI primitives
-					if (id.includes('@radix-ui')) {
-						return 'vendor-radix';
+					// Radix UI components
+					if (id.includes('node_modules/@radix-ui/')) {
+						return 'ui-radix';
 					}
-					// Charts
-					if (id.includes('recharts') || id.includes('d3-')) {
-						return 'vendor-charts';
+					// Icons
+					if (id.includes('node_modules/lucide-react') || id.includes('node_modules/react-feather')) {
+						return 'ui-icons';
 					}
-					// Sentry
-					if (id.includes('@sentry')) {
-						return 'vendor-sentry';
+					// Syntax Highlighting & Markdown
+					if (id.includes('node_modules/rehype') || id.includes('node_modules/remark') || id.includes('node_modules/react-markdown')) {
+						return 'parser-md';
 					}
-					// Everything else from node_modules
-					if (id.includes('node_modules')) {
-						return 'vendor-misc';
+					// Animation
+					if (id.includes('node_modules/framer-motion')) {
+						return 'animation';
+					}
+					// Forms & Validation
+					if (id.includes('node_modules/react-hook-form') || id.includes('node_modules/zod')) {
+						return 'forms';
+					}
+					// Date & Utilities
+					if (id.includes('node_modules/date-fns') || id.includes('node_modules/lodash') || id.includes('node_modules/clsx')) {
+						return 'utils';
 					}
 				},
 			},

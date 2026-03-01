@@ -647,6 +647,63 @@ export class AuthController extends BaseController {
     }
 
     /**
+     * Request password reset
+     * POST /api/auth/forgot-password
+     */
+    static async forgotPassword(request: Request, env: Env, _ctx: ExecutionContext, _routeContext: RouteContext): Promise<Response> {
+        try {
+            const bodyResult = await AuthController.parseJsonBody<{ email: string }>(request);
+            if (!bodyResult.success) {
+                return bodyResult.response!;
+            }
+
+            const { email } = bodyResult.data!;
+            if (!email) {
+                return AuthController.createErrorResponse('Email is required', 400);
+            }
+
+            const authService = new AuthService(env);
+            await authService.forgotPassword(email);
+
+            return AuthController.createSuccessResponse({
+                message: 'If an account exists with this email, a reset code has been sent.'
+            });
+        } catch (error) {
+            return AuthController.handleError(error, 'forgot password');
+        }
+    }
+
+    /**
+     * Reset password
+     * POST /api/auth/reset-password
+     */
+    static async resetPassword(request: Request, env: Env, _ctx: ExecutionContext, _routeContext: RouteContext): Promise<Response> {
+        try {
+            const bodyResult = await AuthController.parseJsonBody<{ email: string; otp: string; newPassword: string }>(request);
+            if (!bodyResult.success) {
+                return bodyResult.response!;
+            }
+
+            const { email, otp, newPassword } = bodyResult.data!;
+            if (!email || !otp || !newPassword) {
+                return AuthController.createErrorResponse('Email, code, and new password are required', 400);
+            }
+
+            const authService = new AuthService(env);
+            await authService.resetPassword(email, otp, newPassword);
+
+            return AuthController.createSuccessResponse({
+                message: 'Password reset successfully. You can now log in with your new password.'
+            });
+        } catch (error) {
+            if (error instanceof SecurityError) {
+                return AuthController.createErrorResponse(error.message, error.statusCode);
+            }
+            return AuthController.handleError(error, 'reset password');
+        }
+    }
+
+    /**
      * Get CSRF token with proper expiration and rotation
      * GET /api/auth/csrf-token
      */
