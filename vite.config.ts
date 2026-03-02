@@ -77,7 +77,7 @@ export default defineConfig({
 	build: {
 		sourcemap: false,
 		rollupOptions: {
-			external: ['ai'],
+			external:'],
 			output: {
 				manualChunks(id) {
 					// Monaco Editor (~5MB) MUST be separate
