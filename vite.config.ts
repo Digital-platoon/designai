@@ -12,7 +12,7 @@ export default defineConfig({
 	optimizeDeps: {
 		exclude: ['format', 'editor.all'],
 		include: ['monaco-editor/esm/vs/editor/editor.api'],
-		force: true, // Force re-optimization on every start
+		force: true,
 	},
 	plugins: [
 		react(),
@@ -20,7 +20,7 @@ export default defineConfig({
 		cloudflare({
 			configPath: 'wrangler.jsonc',
 			remoteBindings: true,
-		}), // Add the node polyfills plugin here
+		}),
 		tailwindcss(),
 	],
 	resolve: {
@@ -47,7 +47,7 @@ export default defineConfig({
 	build: {
 		sourcemap: false,
 		rollupOptions: {
-			external: [],
+			external: ['path', 'node:path', 'node:fs', 'node:os', 'node:crypto', 'node:stream', 'node:buffer', 'node:util', 'node:events', 'node:url', 'node:http', 'node:https', 'node:net', 'node:tls', 'node:zlib', 'node:child_process', 'node:worker_threads'],
 			output: {
 				manualChunks(id) {
 					if (id.includes('node_modules/monaco-editor')) {
