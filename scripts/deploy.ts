@@ -624,8 +624,14 @@ class CloudflareDeploymentManager {
 				return;
 			}
 
-			// Make script executable
-			execSync(`chmod +x "${deployScript}"`, { cwd: templatesDir });
+			// Make script executable - skip on Windows as chmod doesn't exist
+			if (process.platform !== 'win32') {
+				try {
+					execSync(`chmod +x "${deployScript}"`, { cwd: templatesDir });
+				} catch (chmodError) {
+					console.warn(`⚠️  Failed to make script executable: ${chmodError instanceof Error ? chmodError.message : String(chmodError)}`);
+				}
+			}
 
 			// Run deployment script with environment variables
 			console.log(
@@ -640,7 +646,10 @@ class CloudflareDeploymentManager {
 				R2_BUCKET_NAME: templatesBucket.bucket_name,
 			};
 
-			execSync('./deploy_templates.sh', {
+			// On Windows, use 'sh' or 'bash' to run the script if available
+			const deployCommand = process.platform === 'win32' ? `sh "${deployScript}"` : `./deploy_templates.sh`;
+
+			execSync(deployCommand, {
 				stdio: 'inherit',
 				cwd: templatesDir,
 				env: deployEnv,
@@ -969,8 +978,8 @@ class CloudflareDeploymentManager {
 
 		// Only update workers_dev and preview_urls if not preserving existing flags
 		if (!preserveExistingFlags) {
-			updatedContent = this.updateWranglerField(updatedContent, 'workers_dev', false);
-			updatedContent = this.updateWranglerField(updatedContent, 'preview_urls', false);
+			updatedContent = this.updateWranglerField(updatedContent, 'workers_dev', true);
+			updatedContent = this.updateWranglerField(updatedContent, 'preview_urls', true);
 		}
 
 		return updatedContent;
@@ -1896,11 +1905,12 @@ class CloudflareDeploymentManager {
 		console.log('Running database migrations...');
 		try {
 			await execSync(
-				'bun run db:generate && bun run db:migrate:remote',
+				'npm run db:generate && npm run db:migrate:remote',
 				{
 					stdio: 'inherit',
 					cwd: PROJECT_ROOT,
 					encoding: 'utf8',
+					env: { ...process.env, CI: 'true' }
 				}
 			);
 		} catch (error) {

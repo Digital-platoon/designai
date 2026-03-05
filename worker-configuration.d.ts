@@ -31,6 +31,7 @@ declare namespace Cloudflare {
 		OPENROUTER_API_KEY: string;
 		GOOGLE_AI_STUDIO_API_KEY: string;
 		ANTHROPIC_API_KEY: string;
+		OPENAI_API_KEY: string;
 		SERPAPI_KEY: string;
 
 		// Sentry & Observability
