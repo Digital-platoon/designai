@@ -82,6 +82,7 @@
 		"diff": "^8.0.2",
 		"dotenv": "^17.2.2",
 		"drizzle-orm": "^0.44.5",
+		"elliptic": "^6.6.1",
 		"embla-carousel-react": "^8.6.0",
 		"esbuild": "^0.25.10",
 		"eslint-import-resolver-typescript": "^4.4.4",
@@ -120,10 +121,8 @@
 	},
 	"devDependencies": {
 		"@cloudflare/vite-plugin": "^1.13.9",
-		"@cloudflare/vitest-pool-workers": "^0.8.71",
-		"@cloudflare/workers-types": "^4.20260301.1",
 		"@cloudflare/vitest-pool-workers": "^0.12.17",
-		"@cloudflare/workers-types": "^4.20260228.0",
+		"@cloudflare/workers-types": "^4.20260301.1",
 		"@eslint/js": "^9.36.0",
 		"@tailwindcss/typography": "^0.5.19",
 		"@tailwindcss/vite": "^4.1.13",
@@ -149,12 +148,10 @@
 		"typescript": "^5.9.2",
 		"typescript-eslint": "^8.44.1",
 		"vite": "npm:rolldown-vite@latest",
-		"vite": "^6.3.5",
 		"vite-plugin-monaco-editor": "^1.1.0",
 		"vite-plugin-node-polyfills": "^0.25.0",
 		"vitest": "^3.2.4",
 		"wrangler": "^4.69.0"
-		"wrangler": "^4.68.1"
 	},
 	"prettier": {
 		"singleQuote": true,
@@ -163,10 +160,6 @@
 	"overrides": {
 		"vite": "npm:rolldown-vite@latest",
 		"@cloudflare/containers": "^0.0.28"
-	}
-}
-		"elliptic": "^6.6.1",
-		"esbuild": "^0.25.10"
 	},
 	"trustedDependencies": [
 		"@cloudflare/workers-types",
