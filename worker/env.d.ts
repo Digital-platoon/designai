@@ -60,4 +60,4 @@ declare namespace Cloudflare {
 }
 
 // Ensure global Env also has these
-interface Env extends Cloudflare.Env { }
+type Env = Cloudflare.Env;

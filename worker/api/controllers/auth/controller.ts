@@ -115,8 +115,8 @@ export class AuthController extends BaseController {
             });
 
             // Rotate CSRF token on successful registration if configured
-            if (CsrfService.defaults.rotateOnAuth) {
-                CsrfService.rotateToken(response);
+            if (CsrfService.getDefaults(env).rotateOnAuth) {
+                CsrfService.rotateToken(response, env);
             }
 
             return response;
@@ -171,8 +171,8 @@ export class AuthController extends BaseController {
             });
 
             // Rotate CSRF token on successful login if configured
-            if (CsrfService.defaults.rotateOnAuth) {
-                CsrfService.rotateToken(response);
+            if (CsrfService.getDefaults(env).rotateOnAuth) {
+                CsrfService.rotateToken(response, env);
             }
 
             return response;
@@ -707,18 +707,19 @@ export class AuthController extends BaseController {
      * Get CSRF token with proper expiration and rotation
      * GET /api/auth/csrf-token
      */
-    static async getCsrfToken(request: Request, _env: Env, _ctx: ExecutionContext, _routeContext: RouteContext): Promise<Response> {
+    static async getCsrfToken(request: Request, env: Env, _ctx: ExecutionContext, _routeContext: RouteContext): Promise<Response> {
         try {
             const token = CsrfService.getOrGenerateToken(request, false);
+            const defaults = CsrfService.getDefaults(env);
 
             const response = AuthController.createSuccessResponse({
                 token,
-                headerName: CsrfService.defaults.headerName,
-                expiresIn: Math.floor(CsrfService.defaults.tokenTTL / 1000)
+                headerName: defaults.headerName,
+                expiresIn: Math.floor(defaults.tokenTTL / 1000)
             });
 
             // Set the token in cookie with proper expiration
-            const maxAge = Math.floor(CsrfService.defaults.tokenTTL / 1000);
+            const maxAge = Math.floor(defaults.tokenTTL / 1000);
             CsrfService.setTokenCookie(response, token, maxAge);
 
             return response;
@@ -746,17 +747,18 @@ export class AuthController extends BaseController {
 
             // Include CSRF token with provider info
             const csrfToken = CsrfService.getOrGenerateToken(request, false);
+            const defaults = CsrfService.getDefaults(env);
 
             const response = AuthController.createSuccessResponse({
                 providers,
                 hasOAuth: providers.google || providers.github,
                 requiresEmailAuth: !providers.google && !providers.github,
                 csrfToken,
-                csrfExpiresIn: Math.floor(CsrfService.defaults.tokenTTL / 1000)
+                csrfExpiresIn: Math.floor(defaults.tokenTTL / 1000)
             });
 
             // Set CSRF token cookie with proper expiration
-            const maxAge = Math.floor(CsrfService.defaults.tokenTTL / 1000);
+            const maxAge = Math.floor(defaults.tokenTTL / 1000);
             CsrfService.setTokenCookie(response, csrfToken, maxAge);
 
             return response;

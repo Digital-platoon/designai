@@ -455,18 +455,18 @@ export async function infer<OutputSchema extends z.AnyZodObject>({
 
     try {
         const authUser: AuthUser = {
-            id: metadata.userId,
+            id: metadata.userId || 'anonymous',
             email: 'unknown@platform.local',
             displayName: undefined,
             username: undefined,
             avatarUrl: undefined
         };
 
-        const userConfig = await getUserConfigurableSettings(env, metadata.userId)
+        const userConfig = await getUserConfigurableSettings(env, metadata.userId || 'anonymous');
         // Maybe in the future can expand using config object for other stuff like global model configs?
-        await RateLimitService.enforceLLMCallsRateLimit(env, userConfig.security.rateLimit, authUser)
+        await RateLimitService.enforceLLMCallsRateLimit(env, userConfig.security.rateLimit, authUser);
 
-        const { apiKey, baseURL, defaultHeaders } = await getConfigurationForModel(modelName, env, metadata.userId);
+        const { apiKey, baseURL, defaultHeaders } = await getConfigurationForModel(modelName, env, metadata.userId || 'anonymous');
         console.log(`baseUrl: ${baseURL}, modelName: ${modelName}`);
 
         // Remove [*.] from model name
